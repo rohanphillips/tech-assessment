@@ -4,7 +4,9 @@ ENV['RAILS_ENV'] ||= 'test'
 
 require File.expand_path('../config/environment', __dir__)
 #require database cleaner at top level
-require 'database-cleaner'
+require 'database_cleaner'
+require 'factory_bot_rails'
+require 'shoulda-matchers'
 
 # Prevent database truncation if the environment is production
 abort("The Rails environment is running in production mode!") if Rails.env.production?
@@ -33,14 +35,6 @@ begin
 rescue ActiveRecord::PendingMigrationError => e
   puts e.to_s.strip
   exit 1
-end
-
-#configure shoulda matchers to use rspec as the test framework and full match
-Shoulda::Matchers.configure do |config|
-  config.integrate do |with|
-    with.test_framework :rspec
-    with.library :rails
-  end
 end
 
 RSpec.configure do |config|
@@ -86,4 +80,28 @@ RSpec.configure do |config|
     end
   end
 
+end
+
+RSpec.configure do |config|
+  #add FactoryBot methods
+  config.include FactoryBot::Syntax::Methods
+  # start by truncating all the tables but then use the faster transaction strategy the rest of the time.
+  config.before(:suite) do
+    DatabaseCleaner.clean_with(:truncation)
+    DatabaseCleaner.strategy = :transaction
+  end
+  # start the transaction strategy as examples are run
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
+  end
+end
+
+#configure shoulda matchers to use rspec as the test framework and full match
+Shoulda::Matchers.configure do |config|
+  config.integrate do |with|
+    with.test_framework :rspec
+    with.library :rails
+  end
 end

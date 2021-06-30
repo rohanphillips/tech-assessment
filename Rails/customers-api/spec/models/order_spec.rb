@@ -1,5 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe Order, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+  #Association Test
+  it { should belong_to(:customer)}
+  #Validation Tests
+  it { should validate_presence_of(:item_name)}
 end
